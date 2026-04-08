@@ -37,6 +37,8 @@ fn main() {
 
             // 🌐 Browser 도구들
             commands::browser::web_search,
+            commands::browser::open_url,
+            commands::browser::read_webpage,
 
             // 👁️ Desktop Control 도구들
             commands::desktop::move_mouse_and_click,

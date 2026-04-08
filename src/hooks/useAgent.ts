@@ -223,6 +223,14 @@ export function useAgent({
                   if (!tavilyApiKey) throw new Error("Tavily API 키가 설정되지 않았습니다.");
                   const result = await invoke<string>("web_search", { query: args.query, apiKey: tavilyApiKey });
                   toolResultContent = result;
+                } else if (toolCall.function.name === "open_url") {
+                  setSystemStatus(`SYSTEM: 실행 계획 -> browser.open_url (url: '${args.url}')`);
+                  const result = await invoke<string>("open_url", { url: args.url });
+                  toolResultContent = result;
+                } else if (toolCall.function.name === "read_webpage") {
+                  setSystemStatus(`SYSTEM: 실행 계획 -> browser.read_webpage (url: '${args.url}')`);
+                  const result = await invoke<string>("read_webpage", { url: args.url });
+                  toolResultContent = result;
                 } else if (toolCall.function.name === "move_mouse_and_click") {
                   setSystemStatus(`SYSTEM: 실행 계획 -> desktop.move_mouse_and_click (x: ${args.x}, y: ${args.y})`);
                   const result = await invoke<string>("move_mouse_and_click", { x: args.x, y: args.y });

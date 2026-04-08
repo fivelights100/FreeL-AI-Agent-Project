@@ -241,7 +241,7 @@ export const PLUGIN_REGISTRY = [
   {
     id: "browser",
     name: "Browser Plugin (Web Search)",
-    description: "인터넷 웹 검색을 통해 최신 정보 획득 (Tavily API)",
+    description: "인터넷 웹 검색 및 웹페이지 직접 열기/읽기",
     tools: [
       {
         type: "function",
@@ -249,6 +249,22 @@ export const PLUGIN_REGISTRY = [
           name: "web_search",
           description: "인터넷 검색이 필요할 때 웹 검색을 수행합니다.",
           parameters: { type: "object", properties: { query: { type: "string" } }, required: ["query"] }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "open_url",
+          description: "사용자의 기본 브라우저를 띄워서 특정 URL 화면을 직접 열어줍니다.",
+          parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] }
+        }
+      },
+      {
+        type: "function",
+        function: {
+          name: "read_webpage",
+          description: "특정 웹페이지(URL) 안으로 들어가 본문 텍스트 전체를 읽어옵니다. 검색 결과의 상세 내용을 파악하거나 기사, 블로그 내용을 요약할 때 사용하세요.",
+          parameters: { type: "object", properties: { url: { type: "string" } }, required: ["url"] }
         }
       }
     ] as OpenAI.Chat.ChatCompletionTool[]
