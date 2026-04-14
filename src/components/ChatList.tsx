@@ -36,8 +36,12 @@ export function ChatList({ messages, messagesEndRef }: ChatListProps) {
         }
         
         return (
-          <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in-up`}>
-            <div className={`max-w-[85%] p-3 text-sm whitespace-pre-wrap ${msg.role === "user" ? "bg-blue-500/80 rounded-2xl rounded-tr-sm" : "bg-white/10 border border-white/10 rounded-2xl rounded-tl-sm"}`}>
+          <div key={idx} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-fade-in-up mb-6`}>
+            <div className={`max-w-[85%] p-4 text-[14.5px] leading-relaxed tracking-wide ${
+              msg.role === "user" 
+                ? "bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-2xl rounded-tr-sm shadow-[0_4px_20px_rgba(99,102,241,0.2)]" 
+                : "bg-white/[0.03] border border-white/[0.05] text-slate-200 rounded-2xl rounded-tl-sm shadow-sm backdrop-blur-sm"
+            }`}>
               {msg.role === "user" ? (
                   typeof msg.content === 'string' ? msg.content : "📸 [화면 캡처 이미지가 전송되었습니다]"
               ) : (

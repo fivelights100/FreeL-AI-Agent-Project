@@ -53,7 +53,7 @@ export function ChatInput({
             ref={textareaRef} value={inputText} onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); handleSend(); } }}
             disabled={isProcessing} placeholder={isProcessing ? "작업을 수행하고 있습니다..." : "Shift + Enter로 줄바꿈을 할 수 있습니다..."}
-            className="flex-1 bg-black/30 border border-white/20 rounded-lg px-4 py-2 text-sm outline-none focus:border-blue-400 focus:bg-black/50 transition-all placeholder:text-white/40 disabled:opacity-50 resize-none overflow-y-auto min-h-[42px]"
+            className="flex-1 bg-white/[0.03] border border-white/[0.08] rounded-xl px-5 py-3 text-[14px] outline-none transition-all duration-300 placeholder:text-slate-500 focus:bg-white/[0.05] focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 disabled:opacity-50 resize-none overflow-y-auto min-h-[48px] shadow-inner"
             rows={1}
           />
         ) : (
@@ -66,7 +66,7 @@ export function ChatInput({
         )}
         
         {/* 전송 버튼 */}
-        <button onClick={handleSend} disabled={isProcessing} className="h-[42px] bg-blue-500 hover:bg-blue-400 disabled:bg-blue-800 disabled:text-white/50 px-4 rounded-lg text-sm font-semibold transition-colors shrink-0">
+        <button onClick={handleSend} disabled={isProcessing} className="h-[48px] bg-white text-black hover:bg-slate-200 disabled:bg-white/10 disabled:text-white/30 px-5 rounded-xl text-sm font-bold transition-all duration-300 shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
           전송
         </button>
       </div>

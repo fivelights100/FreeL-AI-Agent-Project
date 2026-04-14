@@ -44,7 +44,18 @@ function App() {
   const { isProcessing, sendMessage } = useAgent({ openai, messages, setMessages, installedPlugins, fsWhitelist, userHome, setSystemStatus, indexingDepth, indexingBasePath });
 
   // 화면 스크롤 및 텍스트박스 높이 조절
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { 
+    if (messagesEndRef.current) {
+      const parent = messagesEndRef.current.parentElement;
+      if (parent) {
+        parent.scrollTo({
+          top: parent.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [messages]);
+  
   useEffect(() => {
     if (isExpanded && textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -68,8 +79,12 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-900 to-blue-950 text-white font-sans overflow-hidden p-2 sm:p-4">
-      
+    <div className="fixed inset-0 flex flex-col bg-[#0A0A0B] text-slate-200 font-sans overflow-hidden p-2 sm:p-4 selection:bg-indigo-500/30">
+  
+      {/* 배경 빛 효과 (절대 위치는 fixed 기준으로 잘 잡힙니다) */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
+
       {/* 1. 상단바 (Header) */}
       <Header 
         isBentoOpen={isBentoOpen} setIsBentoOpen={setIsBentoOpen} 

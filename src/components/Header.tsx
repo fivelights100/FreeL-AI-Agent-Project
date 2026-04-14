@@ -16,7 +16,7 @@ export function Header({
   
   return (
     // 💡 p-3 -> p-2, mb-4 -> mb-2 로 수정하여 두께와 간격을 줄임
-    <header className="shrink-0 flex items-center justify-between p-2 border border-white/10 rounded-xl bg-white/5 backdrop-blur-md mb-2 shadow-lg relative z-50">
+    <header className="shrink-0 flex items-center justify-between p-3 border border-white/[0.06] rounded-2xl bg-white/[0.02] backdrop-blur-xl mb-3 shadow-[0_4px_30px_rgba(0,0,0,0.1)] relative z-50 transition-all">
       <div className="flex items-center gap-2">
         <button 
           onClick={() => setIsBentoOpen(!isBentoOpen)} 

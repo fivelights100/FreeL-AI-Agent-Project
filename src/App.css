@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden !important;
+  position: fixed !important; /* 화면 밀림 완벽 차단 */
+  top: 0;
+  left: 0;
+}
+
 /* ✅ 1. 스크롤바 투명 & 슬림화 커스텀 */
 ::-webkit-scrollbar {
   width: 6px;
@@ -20,14 +31,27 @@
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(20px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.4s ease-out forwards;
+  /* cubic-bezier를 사용해 처음엔 빠르게, 끝에선 아주 부드럽게 멈추도록 설정 */
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 스크롤바 디자인도 더 얇고 고급스럽게 */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }

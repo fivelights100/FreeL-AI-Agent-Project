@@ -41,9 +41,9 @@ pub fn take_screenshot() -> Result<String, String> {
 pub fn resize_window(window: Window, expand: bool) -> Result<String, String> {
     let _ = window.set_resizable(true);
     if expand {
-        let _ = window.set_size(LogicalSize::new(1200.0, 800.0));
+        let _ = window.set_size(LogicalSize::new(1000.0, 700.0));
     } else {
-        let _ = window.set_size(LogicalSize::new(600.0, 800.0));
+        let _ = window.set_size(LogicalSize::new(400.0, 700.0));
     }
     let _ = window.set_resizable(false);
     Ok("창 크기 변경 완료".to_string())

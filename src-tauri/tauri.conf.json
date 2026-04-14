@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "freel-desktop",
-        "width": 600,
-        "height": 800,
+        "width": 400,
+        "height": 700,
         "resizable": false,
         "transparent": true,
         "decorations": false
