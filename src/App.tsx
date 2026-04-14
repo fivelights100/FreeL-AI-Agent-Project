@@ -23,7 +23,6 @@ const openai = new OpenAI({
 function App() {
   const { installedPlugins, setInstalledPlugins, fsWhitelist, setFsWhitelist, userHome } = useSettings();
 
-  const [indexingBasePath, setIndexingBasePath] = useState("");
   const [indexingDepth, setIndexingDepth] = useState(3);
 
   const [activeTab, setActiveTab] = useState<"chat" | "plugin">("chat");
@@ -31,7 +30,7 @@ function App() {
   const [isBentoOpen, setIsBentoOpen] = useState(false);
   const [isAttachmentOpen, setIsAttachmentOpen] = useState(false);
 
-  const [messages, setMessages] = useState<Message[]>([systemPrompt, { role: "assistant", content: "안녕하세요! 사용자님의 데스크탑 제어 AI입니다. 무엇이든 요청해 주세요.\n\n절대로 개인정보를 입력하지 마세요!!\n\n처음 사용하시는 사용자 께서는 플러그인 활성화 및 플러그인 초기 설정을 먼저 진행해 주세요." }]);
+  const [messages, setMessages] = useState<Message[]>([systemPrompt, { role: "assistant", content: "안녕하세요! 사용자님의 데스크탑 제어 AI입니다. 무엇이든 요청해 주세요.\n\n절대로 개인정보를 입력하지 마세요!!" }]);
   const [inputText, setInputText] = useState("");
   const [systemStatus, setSystemStatus] = useState("대기 중...");
 
@@ -41,7 +40,7 @@ function App() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { isRecording, startRecording, stopRecording } = useAudioRecorder({ openai, setInputText, setSystemStatus });
-  const { isProcessing, sendMessage } = useAgent({ openai, messages, setMessages, installedPlugins, fsWhitelist, userHome, setSystemStatus, indexingDepth, indexingBasePath });
+  const { isProcessing, sendMessage } = useAgent({ openai, messages, setMessages, installedPlugins, fsWhitelist, userHome, setSystemStatus, indexingDepth });
 
   // 화면 스크롤 및 텍스트박스 높이 조절
   useEffect(() => { 
@@ -142,8 +141,6 @@ function App() {
             setInstalledPlugins={setInstalledPlugins} 
             fsWhitelist={fsWhitelist} 
             setFsWhitelist={setFsWhitelist}
-            indexingBasePath={indexingBasePath}
-            setIndexingBasePath={setIndexingBasePath}
             indexingDepth={indexingDepth}
             setIndexingDepth={setIndexingDepth}
           />

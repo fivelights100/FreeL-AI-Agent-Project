@@ -8,7 +8,6 @@ export function useSettings() {
   const [isStoreLoaded, setIsStoreLoaded] = useState(false);
   const [userHome, setUserHome] = useState<string>("");
 
-  // 앱 켤 때 설정 불러오기
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -31,7 +30,6 @@ export function useSettings() {
     loadSettings();
   }, []);
 
-  // 설정 바뀔 때마다 자동 저장하기
   useEffect(() => {
     if (!isStoreLoaded) return; 
 
@@ -48,6 +46,5 @@ export function useSettings() {
     saveSettings();
   }, [installedPlugins, fsWhitelist, isStoreLoaded]);
 
-  // App.tsx에서 사용할 수 있도록 상태와 함수들을 반환합니다.
   return { installedPlugins, setInstalledPlugins, fsWhitelist, setFsWhitelist, userHome };
 }
