@@ -48,8 +48,8 @@ export function Live2DView({ isProcessing, lastMessage }: Live2DViewProps) {
         const scale = Math.min(rWidth / model.width, rHeight / model.height) * 1.3;
         
         model.scale.set(scale);
-        model.x = rWidth / 2 - (model.width * scale) / 2 + -150;
-        model.y = rHeight / 2 - (model.height * scale) / 2 + -120;
+        model.x = rWidth / 2 - (model.width * scale) / 2 + -180;
+        model.y = rHeight / 2 - (model.height * scale) / 2 + -150;
       };
 
       // 처음 로딩 시 위치 세팅

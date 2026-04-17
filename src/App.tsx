@@ -30,7 +30,7 @@ function App() {
   const [isBentoOpen, setIsBentoOpen] = useState(false);
   const [isAttachmentOpen, setIsAttachmentOpen] = useState(false);
 
-  const [messages, setMessages] = useState<Message[]>([systemPrompt, { role: "assistant", content: "안녕하세요! 사용자님의 데스크탑 제어 AI입니다. 무엇이든 요청해 주세요.\n\n절대로 개인정보를 입력하지 마세요!!" }]);
+  const [messages, setMessages] = useState<Message[]>([systemPrompt as Message, { role: "assistant", content: "안녕하세요! 사용자님의 데스크탑 제어 AI입니다. 무엇이든 요청해 주세요.\n\n절대로 개인정보를 입력하지 마세요!!" } as Message]);
   const [inputText, setInputText] = useState("");
   const [systemStatus, setSystemStatus] = useState("대기 중...");
 
