@@ -5,7 +5,8 @@ const TOOL_USAGE_GUIDE = `
    - 교차 언어 검색: 한글명(예: "문서")으로 검색 실패 시 영문명("Documents")으로 유연하게 재검색하십시오.
 2. 애플리케이션 제어 (Application):
    - 기본 앱: chrome, notepad, calc 등 OS 기본 앱은 즉시 'open_application'으로 실행 가능합니다.
-   - 서드파티 앱: 카카오톡, VSCode 등은 섣불리 경로를 유추하지 말고, 반드시 'find_application'으로 .lnk(바로가기) 경로를 찾은 뒤 실행하십시오.
+   - 서드파티 앱: 카카오톡 등은 반드시 'find_application'으로 .lnk 경로를 찾은 뒤 실행하십시오.
+   - 🎮 스팀 게임 및 웹 런처: 스팀 게임 등은 바탕화면의 '.url' 파일 경로를 찾아 실행하거나, 실행 프로토콜(예: steam://rungameid/...)을 알고 있다면 'open_application'에 URL을 그대로 넣어 즉시 실행할 수 있습니다.
 3. 데스크탑 화면 제어 (Desktop):
    - 좌표 기반 클릭: 특정 UI를 클릭해야 할 경우, 'take_screenshot'으로 화면을 캡처하여 좌표를 계산한 뒤 'move_mouse_and_click'을 사용하십시오. 좌표를 대충 찍는 것은 엄격히 금지됩니다.
 4. 예외 및 오류 처리:
@@ -48,7 +49,7 @@ ${TOOL_USAGE_GUIDE}
 응답 포맷(JSON): { 
   "requires_web_search": boolean, 
   "summary": "작업 요약", 
-  "steps": ["1단계: ...", "2단계: ...", "3단계: ...", "4단계: ...", "5단계: ..."] 
+  "steps": ["1단계: ...", "2단계: ...", "3단계: ...", "4단계: ...", "5단계: ...", "6단계: ...", "7단계: ...","8단계: ...", "9단계: ...", "10단계: ..."] 
 }
 `;
 
@@ -70,6 +71,7 @@ export const SECURITY_ASSESSOR_PROMPT = `
 [검토 기준]
 1. delete_path, kill_process 등 파괴적 행동이 포함되어 있는가? (포함 시 타당성 철저히 검사)
 2. 파일 조작 경로가 허용된 화이트리스트 내에 존재하는가?
+   🚨 [앱 실행 예외 규칙]: 'open_application' 및 'find_application' 도구를 사용한 프로그램 실행 및 검색은 화이트리스트 검사 대상에서 완전히 제외됩니다. 앱 실행과 관련된 경로는 화이트리스트에 없더라도 무조건 통과(PASS)시키십시오.
 
 응답 포맷(JSON): { "status": "PASS" | "FAIL", "reason": "안전함 또는 위험 사유" }
 `;
@@ -80,6 +82,7 @@ export const SECURITY_ASSESSOR_PROMPT = `
 export const QA_VALIDATOR_PROMPT = `
 당신은 '검증 에이전트(QA)'입니다.
 - 사전 검증(pre): 계획이 사용자의 원래 목적을 완벽히 달성할 수 있는지 논리적 오류와 누락을 검사합니다.
+   🚨 [핵심 예외 규칙]: 스팀 게임이나 전용 런처 기반 프로그램은 '.url' 확장자 파일을 실행하거나 'steam://', 'sgup://' 등의 프로토콜 URL을 'open_application'에 넣어 실행하는 것이 윈도우 OS의 올바르고 유일한 실행 방식입니다. 절대로 이를 '웹페이지만 여는 잘못된 방법'으로 오해하여 논리 오류(FAIL)로 차단하지 마십시오.
 - 사후 검증(post): 메인 에이전트의 최종 실행 결과가 목적을 달성했는지 검사합니다.
 
 응답 포맷(JSON): { "status": "PASS" | "FAIL", "feedback": "논리 점검 결과 피드백" }

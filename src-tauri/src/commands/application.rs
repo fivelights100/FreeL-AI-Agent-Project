@@ -1,8 +1,13 @@
 use std::env;
-// 👇 walkdir::WalkDir 대신 ignore::WalkBuilder를 가져옵니다.
 use ignore::WalkBuilder;
 use sysinfo::System;
 use tauri::command;
+
+// Windows 레지스트리 탐색을 위한 모듈 (Windows 환경에서만 컴파일되도록 안전 처리)
+#[cfg(target_os = "windows")]
+use winreg::enums::*;
+#[cfg(target_os = "windows")]
+use winreg::RegKey;
 
 #[command]
 pub fn open_application(app_name: String, args: Option<Vec<String>>) -> Result<String, String> {
@@ -30,32 +35,81 @@ pub fn open_application(app_name: String, args: Option<Vec<String>>) -> Result<S
 pub fn find_application(name: String) -> Result<Vec<String>, String> {
     let mut results = Vec::new();
     let name_lower = name.to_lowercase();
-    let mut search_paths = Vec::new();
 
-    if let Ok(appdata) = env::var("APPDATA") { 
-        search_paths.push(format!("{}\\Microsoft\\Windows\\Start Menu\\Programs", appdata)); 
+    #[cfg(target_os = "windows")]
+    {
+        // 1. 레지스트리 스캔: App Paths (Win+R 실행 경로, 크롬/오피스 등 가장 정확한 .exe 경로)
+        let app_paths = [
+            (HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths"),
+            (HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths"),
+        ];
+
+        for (hkey, path) in app_paths.iter() {
+            let root = RegKey::predef(*hkey);
+            if let Ok(app_paths_key) = root.open_subkey(path) {
+                for key_name in app_paths_key.enum_keys().filter_map(|k| k.ok()) {
+                    if key_name.to_lowercase().contains(&name_lower) {
+                        if let Ok(app_key) = app_paths_key.open_subkey(&key_name) {
+                            if let Ok(exe_path) = app_key.get_value::<String, _>("") {
+                                results.push(exe_path);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. 레지스트리 스캔: 제어판 프로그램 목록 (Uninstall 경로)
+        let uninstall_paths = [
+            (HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
+            (HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
+            (HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
+        ];
+
+        for (hkey, path) in uninstall_paths.iter() {
+            let root = RegKey::predef(*hkey);
+            if let Ok(uninstall_key) = root.open_subkey(path) {
+                for key_name in uninstall_key.enum_keys().filter_map(|k| k.ok()) {
+                    if let Ok(app_key) = uninstall_key.open_subkey(&key_name) {
+                        // DisplayName(앱 이름)에 검색어가 포함되어 있다면
+                        if let Ok(display_name) = app_key.get_value::<String, _>("DisplayName") {
+                            if display_name.to_lowercase().contains(&name_lower) {
+                                // 해당 앱의 아이콘 경로(보통 실제 exe 경로와 동일)를 추출
+                                if let Ok(mut icon_path) = app_key.get_value::<String, _>("DisplayIcon") {
+                                    if let Some(idx) = icon_path.rfind(',') {
+                                        icon_path.truncate(idx); // 경로 끝에 붙은 아이콘 인덱스(",0") 제거
+                                    }
+                                    let clean_path = icon_path.trim_matches('"').to_string();
+                                    if clean_path.to_lowercase().ends_with(".exe") {
+                                        results.push(clean_path);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-    if let Ok(programdata) = env::var("PROGRAMDATA") { 
-        search_paths.push(format!("{}\\Microsoft\\Windows\\Start Menu\\Programs", programdata)); 
-    }
-    if let Ok(userprofile) = env::var("USERPROFILE") { 
-        search_paths.push(format!("{}\\Desktop", userprofile)); 
-    }
-    if let Ok(public) = env::var("PUBLIC") { 
-        search_paths.push(format!("{}\\Desktop", public)); 
-    }
+
+    // 3. 기존 방식: 바탕화면 및 시작 메뉴의 바로가기(.lnk) 탐색 (레지스트리에 없는 휴대용 앱용)
+    let mut search_paths = Vec::new();
+    if let Ok(appdata) = env::var("APPDATA") { search_paths.push(format!("{}\\Microsoft\\Windows\\Start Menu\\Programs", appdata)); }
+    if let Ok(programdata) = env::var("PROGRAMDATA") { search_paths.push(format!("{}\\Microsoft\\Windows\\Start Menu\\Programs", programdata)); }
+    if let Ok(userprofile) = env::var("USERPROFILE") { search_paths.push(format!("{}\\Desktop", userprofile)); }
+    if let Ok(public) = env::var("PUBLIC") { search_paths.push(format!("{}\\Desktop", public)); }
 
     for base_path in search_paths {
-        // 👇 ignore::WalkBuilder를 사용하여 시작 메뉴와 바탕화면 탐색 (깊이 3)
         let walker = WalkBuilder::new(&base_path).max_depth(Some(3)).build();
-        
         for result in walker {
             if let Ok(entry) = result {
                 let path = entry.path();
                 if path.is_file() {
                     if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-                        // .lnk(바로가기) 파일만 수집
-                        if filename.to_lowercase().contains(&name_lower) && filename.ends_with(".lnk") {
+                        let lower_filename = filename.to_lowercase();
+                        
+                        // .url 확장자도 수집하도록 조건을 추가합니다!
+                        if lower_filename.contains(&name_lower) && (lower_filename.ends_with(".lnk") || lower_filename.ends_with(".url")) {
                             results.push(path.to_string_lossy().to_string());
                         }
                     }
@@ -64,6 +118,7 @@ pub fn find_application(name: String) -> Result<Vec<String>, String> {
         }
     }
     
+    // 최종 결과 필터링 (중복 제거 및 상위 10개만 반환)
     results.sort();
     results.dedup();
     results.truncate(10);
