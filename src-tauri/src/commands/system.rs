@@ -172,3 +172,15 @@ pub async fn control_brightness(action: String, level: Option<u32>) -> Result<St
     }
     Ok(format!("💡 [화면 밝기 제어 결과]\n{}", results.join("\n")))
 }
+
+#[tauri::command]
+pub fn resize_window(window: tauri::Window, expand: bool) {
+    // expand가 true면 넓은 창, false면 좁은 창으로 변경하는 로직
+    // (이전에 사용하셨던 로직을 그대로 붙여넣어 주세요)
+    use tauri::LogicalSize;
+    if expand {
+        let _ = window.set_size(LogicalSize::new(1200.0, 800.0));
+    } else {
+        let _ = window.set_size(LogicalSize::new(400.0, 600.0));
+    }
+}

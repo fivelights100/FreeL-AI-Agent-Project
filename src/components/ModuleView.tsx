@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { PLUGIN_REGISTRY } from "../config/plugins";
+import { MODULE_REGISTRY } from "../modules";
 
-export function PluginView({ 
+export function ModuleView({ 
   fsWhitelist, setFsWhitelist,
   indexingDepth = 3, setIndexingDepth,
-}: { 
-  installedPlugins: string[], setInstalledPlugins: React.Dispatch<React.SetStateAction<string[]>>,
+}: {
+  installedModules: string[], setInstalledModules: React.Dispatch<React.SetStateAction<string[]>>,
   fsWhitelist: string[], setFsWhitelist: React.Dispatch<React.SetStateAction<string[]>>,
   indexingBasePath?: string, setIndexingBasePath?: React.Dispatch<React.SetStateAction<string>>,
   indexingDepth?: number, setIndexingDepth?: React.Dispatch<React.SetStateAction<number>>,
@@ -37,16 +37,16 @@ export function PluginView({
 
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-4">
         {/* 사용자가 설치/삭제를 직접 관리하지 않으므로 PLUGIN_REGISTRY 전체를 보여주어 설정만 관리합니다. */}
-        {PLUGIN_REGISTRY.map(plugin => {
+        {MODULE_REGISTRY.map(moduleItem => {
           return (
-            <div key={plugin.id} className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all animate-fade-in-up">
+            <div key={moduleItem.id} className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all animate-fade-in-up">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-blue-400 text-lg">⚙️</span>
-                <h3 className="font-semibold text-white text-sm">{plugin.name} 상세 설정</h3>
+                <h3 className="font-semibold text-white text-sm">{moduleItem.name} 상세 설정</h3>
               </div>
               
               <div className="bg-black/30 p-4 rounded-lg border border-white/5 text-xs text-white/60">
-                {plugin.id === "filesystem" ? (
+                {moduleItem.id === "filesystem" ? (
                   <div className="mt-2 space-y-6">
                     
                     {/* 👇 그룹 이름을 '탐색'으로 변경하고 화이트리스트 기능 통합 */}

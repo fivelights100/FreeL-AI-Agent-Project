@@ -3,7 +3,12 @@ import { load } from '@tauri-apps/plugin-store';
 import { invoke } from "@tauri-apps/api/core";
 
 export function useSettings() {
-  const [installedPlugins, setInstalledPlugins] = useState<string[]>(["filesystem", "system_info"]);
+  const [installedModules, setInstalledModules] = useState<string[]>([
+  "filesystem", 
+  "application", 
+  "system_info", 
+  "browser"
+]);
   const [fsWhitelist, setFsWhitelist] = useState<string[]>([]);
   const [isStoreLoaded, setIsStoreLoaded] = useState(false);
   const [userHome, setUserHome] = useState<string>("");
@@ -19,8 +24,9 @@ export function useSettings() {
       try {
         const store = await load('freel_settings.json');
         
-        const savedPlugins = await store.get<string[]>("installedPlugins");
-        if (savedPlugins) setInstalledPlugins(savedPlugins);
+        const savedModules = await store.get<string[]>("installedModules");
+        // if (savedModules) setInstalledModules(savedModules); // 이 줄을 잠시 지우거나 주석 처리
+        setInstalledModules(["filesystem", "application", "system_info", "browser"]); // 무조건 4개 다 켜도록 강제 고정
 
         const savedWhitelist = await store.get<string[]>("fsWhitelist");
         if (savedWhitelist) setFsWhitelist(savedWhitelist);
@@ -55,7 +61,7 @@ export function useSettings() {
     const saveSettings = async () => {
       try {
         const store = await load('freel_settings.json');
-        await store.set("installedPlugins", installedPlugins);
+        await store.set("installedModules", installedModules);
         await store.set("fsWhitelist", fsWhitelist);
         
         // 👇 설정 저장하기
@@ -70,10 +76,10 @@ export function useSettings() {
       }
     };
     saveSettings();
-  }, [installedPlugins, fsWhitelist, openaiKey, tavilyKey, elevenlabsKey, voiceId, isStoreLoaded]);
+  }, [installedModules, fsWhitelist, openaiKey, tavilyKey, elevenlabsKey, voiceId, isStoreLoaded]);
 
   return { 
-    installedPlugins, setInstalledPlugins, 
+    installedModules, setInstalledModules,
     fsWhitelist, setFsWhitelist, 
     userHome,
     // 👇 반환 객체에 추가

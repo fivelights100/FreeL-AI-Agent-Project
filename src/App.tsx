@@ -9,7 +9,7 @@ import { useAudioRecorder } from "./hooks/useAudioRecorder";
 import { useAgent, systemPrompt, Message } from "./hooks/useAgent";
 
 // 컴포넌트(Components)
-import { PluginView } from "./components/PluginView";
+import { ModuleView } from "./components/ModuleView";
 import { Header } from "./components/Header";
 import { ChatList } from "./components/ChatList";
 import { ChatInput } from "./components/ChatInput";
@@ -18,7 +18,7 @@ import { SystemSettingsView } from "./components/SystemSettingsView";
 
 function App() {
   const { 
-    installedPlugins, setInstalledPlugins, 
+    installedModules, setInstalledModules,
     fsWhitelist, setFsWhitelist, 
     userHome,
     openaiKey, setOpenaiKey,
@@ -29,7 +29,7 @@ function App() {
 
   const [indexingDepth, setIndexingDepth] = useState(3);
 
-  const [activeTab, setActiveTab] = useState<"chat" | "plugin" | "system">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "module" | "system">("chat");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isBentoOpen, setIsBentoOpen] = useState(false);
   const [isAttachmentOpen, setIsAttachmentOpen] = useState(false);
@@ -50,8 +50,8 @@ function App() {
   }, [openaiKey]);
 
   const { isRecording, startRecording, stopRecording } = useAudioRecorder({openai, setInputText, setSystemStatus });
-  const { isProcessing, sendMessage } = useAgent({ 
-    openai, messages, setMessages, installedPlugins, fsWhitelist, userHome, setSystemStatus, indexingDepth, 
+  const { isProcessing, sendMessage } = useAgent({
+    openai, messages, setMessages, installedModules, fsWhitelist, userHome, setSystemStatus, indexingDepth,
     tavilyKey
   });
 
@@ -147,10 +147,10 @@ function App() {
               isProcessing={isProcessing} handleSend={handleSend}
             />
           </div>
-        ) : activeTab === "plugin" ? (
-          <PluginView 
-            installedPlugins={installedPlugins} 
-            setInstalledPlugins={setInstalledPlugins} 
+        ) : activeTab === "module" ? (
+          <ModuleView 
+            installedModules={installedModules} 
+            setInstalledModules={setInstalledModules} 
             fsWhitelist={fsWhitelist} 
             setFsWhitelist={setFsWhitelist}
             indexingDepth={indexingDepth}

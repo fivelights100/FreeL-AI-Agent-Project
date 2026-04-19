@@ -6,8 +6,8 @@ interface HeaderProps {
   setIsBentoOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isExpanded: boolean;
   toggleWindowSize: () => Promise<void>;
-  activeTab: "chat" | "plugin" | "system";
-  setActiveTab: React.Dispatch<React.SetStateAction<"chat" | "plugin" | "system">>;
+  activeTab: "chat" | "module" | "system";
+  setActiveTab: React.Dispatch<React.SetStateAction<"chat" | "module" | "system">>;
 }
 
 export function Header({ 
@@ -42,7 +42,7 @@ export function Header({
               <p className="text-xs font-semibold text-white/90">채팅</p>
             </div>
             {/* 👇 '플러그인'을 '모듈 설정'으로 변경했습니다. */}
-            <div onClick={() => { setActiveTab("plugin"); setIsBentoOpen(false); }} className={`bg-slate-700 border rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-600 transition-colors group text-center shadow-sm ${activeTab === "plugin" ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-600"}`}>
+            <div onClick={() => { setActiveTab("module"); setIsBentoOpen(false); }} className={`bg-slate-700 border rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-600 transition-colors group text-center shadow-sm ${activeTab === "module" ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-600"}`}>
               <span className="text-2xl transition-transform group-hover:scale-110 drop-shadow-md">🧩</span>
               <p className="text-xs font-semibold text-white/90">모듈 설정</p>
             </div>
