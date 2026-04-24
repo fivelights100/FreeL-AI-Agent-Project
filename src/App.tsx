@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow, currentMonitor, LogicalSize } from '@tauri-apps/api/window';
 import OpenAI from "openai";
 import "./App.css";
 
@@ -55,6 +56,27 @@ function App() {
     serperKey
   });
 
+  useEffect(() => {
+    const adjustWindowSize = async () => {
+      const appWindow = getCurrentWindow();
+      const monitor = await currentMonitor();
+      
+      if (monitor) {
+        const monitorWidth = monitor.size.width / monitor.scaleFactor;
+        const monitorHeight = monitor.size.height / monitor.scaleFactor;
+        
+        // 모니터 크기의 너비 16%, 높이 60% 비율로 조절 (필요에 따라 수정)
+        const targetWidth = monitorWidth * 0.16;
+        const targetHeight = monitorHeight * 0.6;
+        
+        await appWindow.setSize(new LogicalSize(targetWidth, targetHeight));
+        await appWindow.show();
+      }
+    };
+
+    adjustWindowSize();
+  }, []);
+
   // 화면 스크롤 및 텍스트박스 높이 조절
   useEffect(() => { 
     if (messagesEndRef.current) {
@@ -78,9 +100,29 @@ function App() {
   const toggleWindowSize = async () => {
     try {
       const nextExpanded = !isExpanded;
-      await invoke("resize_window", { expand: nextExpanded });
+      const appWindow = getCurrentWindow();
+      const monitor = await currentMonitor();
+
+      if (monitor) {
+        // 모니터 크기를 논리적 픽셀로 변환
+        const monitorWidth = monitor.size.width / monitor.scaleFactor;
+        const monitorHeight = monitor.size.height / monitor.scaleFactor;
+        
+        // 💡 확장 여부에 따라 너비 비율을 다르게 설정 (예: 확장 40%, 축소 20%)
+        const targetWidthRatio = nextExpanded ? 0.4 : 0.16; 
+        const targetHeightRatio = 0.6; // 높이는 60%로 고정
+        
+        const targetWidth = monitorWidth * targetWidthRatio;
+        const targetHeight = monitorHeight * targetHeightRatio;
+        
+        await appWindow.setSize(new LogicalSize(targetWidth, targetHeight));
+      }
+
+      // 기존의 Rust 명령어(invoke) 대신 위 로직으로 처리한 후 상태 업데이트
       setIsExpanded(nextExpanded);
-    } catch (error) { console.error("화면 크기 변경 실패:", error); }
+    } catch (error) { 
+      console.error("화면 크기 변경 실패:", error); 
+    }
   };
 
   const handleSend = () => {
