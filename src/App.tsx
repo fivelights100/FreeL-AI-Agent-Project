@@ -108,7 +108,7 @@ function App() {
         const monitorWidth = monitor.size.width / monitor.scaleFactor;
         const monitorHeight = monitor.size.height / monitor.scaleFactor;
         
-        // 💡 확장 여부에 따라 너비 비율을 다르게 설정 (예: 확장 40%, 축소 20%)
+        // 💡 확장 여부에 따라 너비 비율을 다르게 설정 (예: 확장 40%, 축소 16%)
         const targetWidthRatio = nextExpanded ? 0.4 : 0.16; 
         const targetHeightRatio = 0.6; // 높이는 60%로 고정
         

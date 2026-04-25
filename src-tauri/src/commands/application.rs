@@ -1,13 +1,9 @@
 use std::env;
+use std::fs;
+use std::path::PathBuf;
 use ignore::WalkBuilder;
 use sysinfo::System;
 use tauri::command;
-
-// Windows 레지스트리 탐색을 위한 모듈 (Windows 환경에서만 컴파일되도록 안전 처리)
-#[cfg(target_os = "windows")]
-use winreg::enums::*;
-#[cfg(target_os = "windows")]
-use winreg::RegKey;
 
 #[command]
 pub fn open_application(app_name: String, args: Option<Vec<String>>) -> Result<String, String> {
@@ -36,63 +32,7 @@ pub fn find_application(name: String) -> Result<Vec<String>, String> {
     let mut results = Vec::new();
     let name_lower = name.to_lowercase();
 
-    #[cfg(target_os = "windows")]
-    {
-        // 1. 레지스트리 스캔: App Paths (Win+R 실행 경로, 크롬/오피스 등 가장 정확한 .exe 경로)
-        let app_paths = [
-            (HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths"),
-            (HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths"),
-        ];
-
-        for (hkey, path) in app_paths.iter() {
-            let root = RegKey::predef(*hkey);
-            if let Ok(app_paths_key) = root.open_subkey(path) {
-                for key_name in app_paths_key.enum_keys().filter_map(|k| k.ok()) {
-                    if key_name.to_lowercase().contains(&name_lower) {
-                        if let Ok(app_key) = app_paths_key.open_subkey(&key_name) {
-                            if let Ok(exe_path) = app_key.get_value::<String, _>("") {
-                                results.push(exe_path);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // 2. 레지스트리 스캔: 제어판 프로그램 목록 (Uninstall 경로)
-        let uninstall_paths = [
-            (HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
-            (HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
-            (HKEY_CURRENT_USER, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall"),
-        ];
-
-        for (hkey, path) in uninstall_paths.iter() {
-            let root = RegKey::predef(*hkey);
-            if let Ok(uninstall_key) = root.open_subkey(path) {
-                for key_name in uninstall_key.enum_keys().filter_map(|k| k.ok()) {
-                    if let Ok(app_key) = uninstall_key.open_subkey(&key_name) {
-                        // DisplayName(앱 이름)에 검색어가 포함되어 있다면
-                        if let Ok(display_name) = app_key.get_value::<String, _>("DisplayName") {
-                            if display_name.to_lowercase().contains(&name_lower) {
-                                // 해당 앱의 아이콘 경로(보통 실제 exe 경로와 동일)를 추출
-                                if let Ok(mut icon_path) = app_key.get_value::<String, _>("DisplayIcon") {
-                                    if let Some(idx) = icon_path.rfind(',') {
-                                        icon_path.truncate(idx); // 경로 끝에 붙은 아이콘 인덱스(",0") 제거
-                                    }
-                                    let clean_path = icon_path.trim_matches('"').to_string();
-                                    if clean_path.to_lowercase().ends_with(".exe") {
-                                        results.push(clean_path);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // 3. 기존 방식: 바탕화면 및 시작 메뉴의 바로가기(.lnk) 탐색 (레지스트리에 없는 휴대용 앱용)
+    // 1. 기존 방식: 바탕화면 및 시작 메뉴의 바로가기(.lnk, .url) 탐색
     let mut search_paths = Vec::new();
     if let Ok(appdata) = env::var("APPDATA") { search_paths.push(format!("{}\\Microsoft\\Windows\\Start Menu\\Programs", appdata)); }
     if let Ok(programdata) = env::var("PROGRAMDATA") { search_paths.push(format!("{}\\Microsoft\\Windows\\Start Menu\\Programs", programdata)); }
@@ -107,8 +47,6 @@ pub fn find_application(name: String) -> Result<Vec<String>, String> {
                 if path.is_file() {
                     if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
                         let lower_filename = filename.to_lowercase();
-                        
-                        // .url 확장자도 수집하도록 조건을 추가합니다!
                         if lower_filename.contains(&name_lower) && (lower_filename.ends_with(".lnk") || lower_filename.ends_with(".url")) {
                             results.push(path.to_string_lossy().to_string());
                         }
@@ -117,11 +55,40 @@ pub fn find_application(name: String) -> Result<Vec<String>, String> {
             }
         }
     }
-    
-    // 최종 결과 필터링 (중복 제거 및 상위 10개만 반환)
+
+    // 2. file-scanner 검색 모드 연동 (인수 전달 및 결과 캡처)
+    // AI가 "오버워치 overwatch" 처럼 공백으로 여러 개를 줄 수 있으므로 쪼개서 인수로 넣습니다.
+    let keywords: Vec<&str> = name_lower.split_whitespace().collect();
+
+    let mut cmd = std::process::Command::new("freel-scanner.exe");
+    cmd.args(&keywords); // 추출한 키워드들을 freel-scanner.exe의 인수로 전달
+
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW (검은 창 안 보이게)
+    }
+
+    // status()가 아닌 output()을 사용하여 스캐너의 콘솔 출력(stdout)을 가져옴
+    if let Ok(output) = cmd.output() {
+        if output.status.success() {
+            // 한글 경로가 깨지지 않도록 UTF-8로 변환하여 읽음
+            let stdout_str = String::from_utf8_lossy(&output.stdout);
+            
+            // 스캐너가 출력한 경로들을 한 줄씩 읽어서 결과 배열에 추가
+            for line in stdout_str.lines() {
+                let path_str = line.trim();
+                if !path_str.is_empty() {
+                    results.push(path_str.to_string());
+                }
+            }
+        }
+    }
+
+    // 3. 최종 결과 필터링 (중복 제거 및 AI가 소화하기 좋게 최대 15개로 제한)
     results.sort();
     results.dedup();
-    results.truncate(10);
+    results.truncate(15);
 
     Ok(results)
 }
