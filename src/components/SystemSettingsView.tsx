@@ -1,105 +1,68 @@
-import { useState } from "react";
+import React from "react";
 
-export function SystemSettingsView({
-  openaiKey, setOpenaiKey,
-  serperKey, setSerperKey,
-  elevenlabsKey, setElevenlabsKey,
-  voiceId, setVoiceId
-}: {
-  openaiKey: string, setOpenaiKey: (v: string) => void,
-  serperKey: string, setSerperKey: (v: string) => void,
-  elevenlabsKey: string, setElevenlabsKey: (v: string) => void,
-  voiceId: string, setVoiceId: (v: string) => void
-}) {
-  const [settingsTab, setSettingsTab] = useState<"general" | "advanced">("advanced");
+interface SystemSettingsProps {
+  openaiKey: string; 
+  setOpenaiKey: (key: string) => void;
+  serperKey: string; 
+  setSerperKey: (key: string) => void;
+  elevenlabsKey: string; 
+  setElevenlabsKey: (key: string) => void;
+  voiceId: string; 
+  setVoiceId: (key: string) => void;
+}
 
+export const SystemSettingsView = ({ 
+  openaiKey, setOpenaiKey, 
+  serperKey, setSerperKey, 
+  elevenlabsKey, setElevenlabsKey, 
+  voiceId, setVoiceId 
+}: SystemSettingsProps) => {
   return (
-    <div className="h-full flex flex-col">
-      <div className="shrink-0 mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold flex items-center gap-2 text-blue-100">
-          ⚙️ 시스템 설정
-        </h2>
-      </div>
+    <div className="flex flex-col h-full bg-slate-900/50 p-6 rounded-2xl border border-white/10 animate-fade-in-up overflow-y-auto custom-scrollbar">
+      <h2 className="text-2xl font-bold mb-6 text-white">⚙️ 시스템 설정</h2>
+      
+      <div className="flex flex-col gap-6 max-w-md">
+        
+        {/* 1. OpenAI Key */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-blue-300">OpenAI API Key</label>
+          <input 
+            type="password" 
+            value={openaiKey} 
+            onChange={(e) => setOpenaiKey(e.target.value)}
+            placeholder="sk-proj-..."
+            className="px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:outline-none focus:border-blue-500 transition-colors text-white placeholder:text-white/20"
+          />
+          <p className="text-xs text-white/50">에이전트의 두뇌 역할을 하는 모델 사용을 위한 키입니다.</p>
+        </div>
 
-      <div className="flex gap-2 mb-4 shrink-0 bg-black/20 p-1 rounded-xl">
-        <button
-          onClick={() => setSettingsTab("general")}
-          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${settingsTab === "general" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:bg-white/5 hover:text-white/70"}`}
-        >
-          일반
-        </button>
-        <button
-          onClick={() => setSettingsTab("advanced")}
-          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${settingsTab === "advanced" ? "bg-white/10 text-white shadow-sm" : "text-white/40 hover:bg-white/5 hover:text-white/70"}`}
-        >
-          고급
-        </button>
-      </div>
+        {/* 2. Serper Key (웹 검색용) */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-emerald-300">Serper API Key (Web Search)</label>
+          <input 
+            type="password" 
+            value={serperKey} 
+            onChange={(e) => setSerperKey(e.target.value)}
+            placeholder="Serper.dev API 키 입력..."
+            className="px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:outline-none focus:border-emerald-500 transition-colors text-white placeholder:text-white/20"
+          />
+          <p className="text-xs text-white/50">에이전트가 구글 인터넷 검색을 수행하기 위해 필요합니다.</p>
+        </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-4">
-        {settingsTab === "general" ? (
-          <div className="bg-white/5 border border-white/10 rounded-xl p-6 text-center text-white/50 text-xs">
-            일반 설정 기능은 추후 업데이트 예정입니다.
-          </div>
-        ) : (
-          <div className="bg-white/5 border border-white/10 rounded-xl p-4 transition-all animate-fade-in-up">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-blue-400 text-lg">🔑</span>
-              <h3 className="font-semibold text-white text-sm">API 설정</h3>
-            </div>
-            
-            <div className="bg-black/30 p-4 rounded-lg border border-white/5 text-xs text-white/60 space-y-4">
-              <div>
-                <label className="block text-white/70 mb-1.5 font-semibold">OpenAI API Key (GPT 에이전트)</label>
-                <input
-                  type="password"
-                  value={openaiKey}
-                  onChange={(e) => setOpenaiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="w-full bg-black/50 border border-white/20 rounded-md px-3 py-2 text-xs text-white outline-none focus:border-blue-400 transition-colors"
-                />
-              </div>
+        {/* 3. ElevenLabs Key (나중을 위한 대비) */}
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-semibold text-purple-300">ElevenLabs API Key (TTS)</label>
+          <input 
+            type="password" 
+            value={elevenlabsKey} 
+            onChange={(e) => setElevenlabsKey(e.target.value)}
+            placeholder="음성 합성 API 키 입력..."
+            className="px-4 py-3 bg-black/40 border border-white/10 rounded-lg focus:outline-none focus:border-purple-500 transition-colors text-white placeholder:text-white/20"
+          />
+          <p className="text-xs text-white/50">2D 라이브 및 에이전트의 자연스러운 음성 출력을 위한 키입니다.</p>
+        </div>
 
-              <div>
-                <label className="block text-white/70 mb-1.5 font-semibold">Serper API Key (웹 검색)</label>
-                <input
-                  type="password"
-                  value={serperKey}
-                  onChange={(e) => setSerperKey(e.target.value)}
-                  placeholder="Serper API Key 입력"
-                  className="w-full bg-black/50 border border-white/20 rounded-md px-3 py-2 text-xs text-white outline-none focus:border-blue-400 transition-colors"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-white/10">
-                <label className="block text-white/70 mb-1.5 font-semibold">ElevenLabs API Key (음성 출력)</label>
-                <input
-                  type="password"
-                  value={elevenlabsKey}
-                  onChange={(e) => setElevenlabsKey(e.target.value)}
-                  placeholder="ElevenLabs Key"
-                  className="w-full bg-black/50 border border-white/20 rounded-md px-3 py-2 text-xs text-white outline-none focus:border-blue-400 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="block text-white/70 mb-1.5 font-semibold">ElevenLabs Voice ID</label>
-                <input
-                  type="text"
-                  value={voiceId}
-                  onChange={(e) => setVoiceId(e.target.value)}
-                  placeholder="예: 21m00Tcm4TlvDq8ikWAM"
-                  className="w-full bg-black/50 border border-white/20 rounded-md px-3 py-2 text-xs text-white outline-none focus:border-blue-400 transition-colors"
-                />
-              </div>
-
-              <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-md text-[10px] text-blue-200/80 leading-relaxed text-center">
-                ※ 입력하신 API 키는 암호화되어 사용자 PC 내부에만 안전하게 저장됩니다.<br/>변경 시 즉시 적용됩니다.
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
-}
+};

@@ -1,8 +1,6 @@
 import React from "react";
 
 interface ChatInputProps {
-  isAttachmentOpen: boolean;
-  setIsAttachmentOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isRecording: boolean;
   startRecording: () => Promise<void>;
   stopRecording: () => void;
@@ -15,36 +13,27 @@ interface ChatInputProps {
 }
 
 export function ChatInput({
-  isAttachmentOpen, setIsAttachmentOpen, isRecording, startRecording, stopRecording,
+  isRecording, startRecording, stopRecording,
   isExpanded, textareaRef, inputText, setInputText, isProcessing, handleSend
 }: ChatInputProps) {
   
   return (
     <div className="shrink-0 mt-2 relative">
-      {/* 첨부 팝업 메뉴 (위치 조정됨) */}
-      {isAttachmentOpen && (
-        <div className="absolute bottom-[110%] left-0 flex gap-2 p-2 bg-black/60 border border-white/10 rounded-2xl backdrop-blur-md shadow-xl animate-fade-in-up">
-          <button
-            onClick={() => { isRecording ? stopRecording() : startRecording(); setIsAttachmentOpen(false); }}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isRecording ? "bg-red-500/20 text-red-400 border border-red-500 animate-pulse" : "bg-white/10 hover:bg-white/20 text-white border border-transparent"}`}
-            title="음성으로 명령하기"
-          >
-            {isRecording ? "⏹️" : "🎙️"}
-          </button>
-          <button onClick={() => { alert("파일 첨부 기능은 곧 추가될 예정입니다! 📁"); setIsAttachmentOpen(false); }} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all" title="파일 첨부하기">
-            📁
-          </button>
-        </div>
-      )}
-
-      {/* 💡 입력 컨테이너 (플러스 버튼 + 입력창 + 전송 버튼이 한 줄에 배치됨) */}
       <div className="flex items-end gap-2">
-        {/* 플러스 버튼 */}
+        
+        {/* 마이크 (absolute 띄움 효과 제거, 입력창과 동일한 줄에 배치) */}
         <button
-          onClick={() => setIsAttachmentOpen(!isAttachmentOpen)}
-          className={`shrink-0 w-10 h-[42px] flex items-center justify-center rounded-lg border transition-all ${isAttachmentOpen ? "bg-blue-500/20 border-blue-500 text-blue-400" : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10 hover:text-white"}`}
+          onClick={() => { isRecording ? stopRecording() : startRecording(); }}
+          className={`shrink-0 flex items-center justify-center transition-all rounded-xl ${
+            isExpanded ? "w-12 h-[48px]" : "w-[42px] h-[42px]"
+          } ${
+            isRecording 
+              ? "bg-red-500/20 text-red-400 border border-red-500 animate-pulse" 
+              : "bg-white/10 hover:bg-white/20 text-white border border-transparent"
+          }`}
+          title="음성으로 명령하기"
         >
-          <span className={`text-2xl font-light transition-transform duration-200 ${isAttachmentOpen ? "rotate-45" : "rotate-0"}`}>+</span>
+          {isRecording ? "⏹️" : "🎙️"}
         </button>
 
         {/* 입력창 */}
@@ -65,8 +54,12 @@ export function ChatInput({
           />
         )}
         
-        {/* 전송 버튼 */}
-        <button onClick={handleSend} disabled={isProcessing} className="h-[48px] bg-white text-black hover:bg-slate-200 disabled:bg-white/10 disabled:text-white/30 px-5 rounded-xl text-sm font-bold transition-all duration-300 shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+        {/* 전송 버튼 (마이크 및 입력창과 높이를 맞춤) */}
+        <button 
+          onClick={handleSend} 
+          disabled={isProcessing} 
+          className={`bg-white text-black hover:bg-slate-200 disabled:bg-white/10 disabled:text-white/30 px-5 rounded-xl text-sm font-bold transition-all duration-300 shrink-0 shadow-[0_0_15px_rgba(255,255,255,0.1)] ${isExpanded ? "h-[48px]" : "h-[42px]"}`}
+        >
           전송
         </button>
       </div>

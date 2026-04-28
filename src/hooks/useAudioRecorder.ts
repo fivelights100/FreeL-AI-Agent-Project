@@ -4,10 +4,9 @@ import OpenAI from "openai";
 interface UseAudioRecorderProps {
   openai: OpenAI | null; // 👈여기에 ' | null' 을 추가하세요!
   setInputText: React.Dispatch<React.SetStateAction<string>>;
-  setSystemStatus: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export function useAudioRecorder({ openai, setInputText, setSystemStatus }: UseAudioRecorderProps) {
+export function useAudioRecorder({ openai, setInputText }: UseAudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
@@ -35,7 +34,6 @@ export function useAudioRecorder({ openai, setInputText, setSystemStatus }: UseA
 
       mediaRecorder.start();
       setIsRecording(true);
-      setSystemStatus("🎤 사용자의 음성을 듣고 있습니다...");
     } catch (error) {
       console.error("마이크 접근 실패:", error);
       alert("마이크 권한을 허용해 주시거나 마이크가 연결되어 있는지 확인해 주세요.");
@@ -52,11 +50,9 @@ export function useAudioRecorder({ openai, setInputText, setSystemStatus }: UseA
 
   const transcribeAudio = async (blob: Blob) => {
     if (!openai) {
-      setSystemStatus("🚨 OpenAI API 키가 없습니다. 시스템 설정에서 등록해주세요.");
+      console.error("🚨 OpenAI API 키가 없습니다. 시스템 설정에서 등록해주세요.");
       return;
     }
-
-    setSystemStatus("AI: 음성을 텍스트로 변환 중...");
     try {
       const file = new File([blob], "voice.webm", { type: 'audio/webm' });
       const response = await openai.audio.transcriptions.create({
@@ -68,10 +64,8 @@ export function useAudioRecorder({ openai, setInputText, setSystemStatus }: UseA
       if (response.text) {
         setInputText(prev => prev + (prev ? " " : "") + response.text);
       }
-      setSystemStatus("대기 중...");
     } catch (error) {
       console.error("음성 변환 실패:", error);
-      setSystemStatus("❌ 음성 변환에 실패했습니다.");
     }
   };
 

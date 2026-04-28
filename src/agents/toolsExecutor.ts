@@ -1,44 +1,64 @@
-import { MODULE_REGISTRY } from "../modules";
+export class ToolsExecutor {
+  private ws: WebSocket | null = null;
+  private pendingTasks: Map<string, (result: any) => void> = new Map();
 
-// 권한별 도구 세트 정의
-export const READ_TOOLS = [
-  "list_directory", "read_text_file", "find_files", "get_system_info",
-  "get_realtime_system_info", "get_network_info", "get_battery_info", "get_display_info"
-];
-export const WEB_TOOLS = ["web_search", "read_webpage"];
-export const EXECUTE_TOOLS = [
-  "write_text_file", "delete_path", "copy_path", "move_path", 
-  "open_application", "find_application", "kill_process",
-  "control_system", "control_audio", "control_brightness", "open_url"
-];
-
-// 1. 허용된 도구 목록 가져오기
-export const getAllowedTools = (installedModules: string[], allowedToolNames: string[]) => {
-  return MODULE_REGISTRY
-    .filter(moduleItem => installedModules.includes(moduleItem.id))
-    .flatMap(moduleItem => moduleItem.getTools())
-    .filter(tool => tool.type === "function" && allowedToolNames.includes((tool as any).function.name));
-};
-
-// 2. 도구 실행 라우터 (MCP 클라이언트 역할)
-// 💡 tavilyKey 파라미터를 serperKey로 변경합니다.
-export const executeToolCall = async (toolCall: any, serperKey: string): Promise<string> => {
-  const name = toolCall.function.name;
-  const args = JSON.parse(toolCall.function.arguments || "{}");
-
-  for (const moduleItem of MODULE_REGISTRY) {
-    const tools = moduleItem.getTools();
-    const hasTool = tools.some(t => (t as any).function.name === name);
-    
-    if (hasTool) {
-      try {
-        // ✨ context 객체에 serperKey를 담아서 모듈에 전달합니다.
-        return await moduleItem.execute(name, args, { serperKey });
-      } catch (err) {
-        return `실행 실패: ${err}`;
-      }
-    }
+  constructor() {
+    this.connectWebSocket();
   }
 
-  return `실행 실패: '${name}' 도구를 처리할 수 있는 모듈이 시스템에 존재하지 않습니다.`;
-};
+  private connectWebSocket() {
+    this.ws = new WebSocket('ws://localhost:8080');
+
+    this.ws.onopen = () => {
+      console.log('[Agent] Connected to Freel-Desktop Executor');
+    };
+
+    this.ws.onmessage = (event) => {
+      try {
+        const response = JSON.parse(event.data);
+        if (this.pendingTasks.has(response.taskId)) {
+          const resolve = this.pendingTasks.get(response.taskId);
+          resolve?.(response);
+          this.pendingTasks.delete(response.taskId);
+        }
+      } catch (error) {
+        console.error('[Agent] Failed to parse desktop response', error);
+      }
+    };
+
+    this.ws.onclose = () => {
+      console.warn('[Agent] Disconnected from desktop. Reconnecting in 5s...');
+      setTimeout(() => this.connectWebSocket(), 5000);
+    };
+  }
+
+  public async executeTool(action: string, parameters: any): Promise<any> {
+    // 1. null 및 연결 상태 확인
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      return { status: 'error', error: 'Freel-Desktop is not connected.' };
+    }
+
+    return new Promise((resolve) => {
+      const taskId = crypto.randomUUID();
+      
+      const timeoutId = setTimeout(() => {
+        this.pendingTasks.delete(taskId);
+        resolve({ status: 'error', error: 'Task timeout (30s)' });
+      }, 30000);
+
+      this.pendingTasks.set(taskId, (result) => {
+        clearTimeout(timeoutId);
+        resolve(result);
+      });
+
+      // 2. 이 부분! this.ws 뒤에 느낌표(!)를 붙여 에러를 해결합니다.
+      this.ws!.send(JSON.stringify({
+        taskId,
+        action,
+        parameters
+      }));
+      
+      console.log(`[Agent] Sent task [${action}] to desktop (ID: ${taskId})`);
+    });
+  }
+}

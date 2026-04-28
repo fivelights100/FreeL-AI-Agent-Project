@@ -6,53 +6,80 @@ interface HeaderProps {
   setIsBentoOpen: React.Dispatch<React.SetStateAction<boolean>>;
   isExpanded: boolean;
   toggleWindowSize: () => Promise<void>;
-  activeTab: "chat" | "module" | "system";
-  setActiveTab: React.Dispatch<React.SetStateAction<"chat" | "module" | "system">>;
+  activeTab: "chat" | "2d" | "system";
+  setActiveTab: React.Dispatch<React.SetStateAction<"chat" | "2d" | "system">>;
 }
 
-export function Header({ 
+export const Header = ({ 
   isBentoOpen, setIsBentoOpen, isExpanded, toggleWindowSize, activeTab, setActiveTab 
-}: HeaderProps) {
+}: HeaderProps) => {
   
   return (
-    <header className="shrink-0 flex items-center justify-between p-3 border border-white/[0.06] rounded-2xl bg-white/[0.02] backdrop-blur-xl mb-3 shadow-[0_4px_30px_rgba(0,0,0,0.1)] relative z-50 transition-all">
-      <div className="flex items-center gap-2">
+    // 1. 기존의 배경색(bg-white/...), 테두리(border), 그림자 등을 모두 제거하여 투명하게 만듭니다.
+    <header className="shrink-0 flex items-center justify-between p-2 relative z-50 mb-2">
+      
+      {/* 👈 왼쪽: 햄버거 메뉴 버튼 및 드롭다운 */}
+      <div className="relative z-10">
         <button 
           onClick={() => setIsBentoOpen(!isBentoOpen)} 
-          className="flex items-center gap-3 focus:outline-none group relative p-1 rounded-lg hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all focus:outline-none"
+          title="메뉴 열기"
         >
-          <img src={freelLogo} alt="FreeL 로고" className="h-6 w-auto transition-transform group-hover:scale-105 drop-shadow-md" />
-          <span className={`text-white/50 text-xs transition-transform ${isBentoOpen ? 'rotate-180' : 'rotate-0'}`}>▼</span>
+          {/* 햄버거 아이콘 SVG */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
         </button>
-      </div>
-      
-      <button 
-        onClick={toggleWindowSize}
-        title={isExpanded ? "기본 모드로 축소" : "와이드 모드로 확장"}
-        className="h-[32px] bg-white/10 hover:bg-white/20 px-3 rounded-lg text-sm font-bold text-white/80 transition-colors border border-white/20 shrink-0"
-      >
-        {isExpanded ? "<" : ">"}
-      </button>
 
-      {isBentoOpen && (
-        <div className="absolute top-full left-0 mt-3 w-full sm:w-auto min-w-[320px] bg-slate-800 border border-slate-700 rounded-2xl p-4 shadow-2xl animate-fade-in-up">
-          <div className="grid grid-cols-3 gap-3">
-            <div onClick={() => { setActiveTab("chat"); setIsBentoOpen(false); }} className={`bg-slate-700 border rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-600 transition-colors group text-center shadow-sm ${activeTab === "chat" ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-600"}`}>
-              <span className="text-2xl transition-transform group-hover:scale-110 drop-shadow-md">💬</span>
-              <p className="text-xs font-semibold text-white/90">채팅</p>
-            </div>
-            {/* 👇 '플러그인'을 '모듈 설정'으로 변경했습니다. */}
-            <div onClick={() => { setActiveTab("module"); setIsBentoOpen(false); }} className={`bg-slate-700 border rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-600 transition-colors group text-center shadow-sm ${activeTab === "module" ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-600"}`}>
-              <span className="text-2xl transition-transform group-hover:scale-110 drop-shadow-md">🧩</span>
-              <p className="text-xs font-semibold text-white/90">모듈 설정</p>
-            </div>
-            <div onClick={() => { setActiveTab("system"); setIsBentoOpen(false); }} className={`bg-slate-700 border rounded-xl p-3 flex flex-col items-center gap-2 cursor-pointer hover:bg-slate-600 transition-colors group text-center shadow-sm ${activeTab === "system" ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-600"}`}>
-              <span className="text-2xl transition-transform group-hover:scale-110 drop-shadow-md">⚙️</span>
-              <p className="text-xs font-semibold text-white/90">시스템 설정</p>
+        {/* 햄버거 메뉴 클릭 시 나타나는 드롭다운 리스트 */}
+        {isBentoOpen && (
+          <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-xl border border-slate-600 rounded-xl p-2 shadow-2xl animate-fade-in-up">
+            <div className="flex flex-col gap-1">
+              <button 
+                onClick={() => { setActiveTab("chat"); setIsBentoOpen(false); }} 
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center gap-3 ${activeTab === "chat" ? "bg-blue-500/20 text-blue-300" : "text-white/80 hover:bg-white/10"}`}
+              >
+                <span className="text-lg">💬</span> 채팅 모드
+              </button>
+              <button 
+                onClick={() => { setActiveTab("2d"); setIsBentoOpen(false); }} 
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center gap-3 ${activeTab === "2d" ? "bg-purple-500/20 text-purple-300" : "text-white/80 hover:bg-white/10"}`}
+              >
+                <span className="text-lg">✨</span> 2D 라이브
+              </button>
+              <button 
+                onClick={() => { setActiveTab("system"); setIsBentoOpen(false); }} 
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center gap-3 ${activeTab === "system" ? "bg-blue-500/20 text-blue-300" : "text-white/80 hover:bg-white/10"}`}
+              >
+                <span className="text-lg">⚙️</span> 시스템 설정
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      {/* 🎯 가운데: 로고 (Absolute 정렬로 양옆 버튼 크기에 무관하게 항상 정중앙에 위치) */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
+        <img 
+          src={freelLogo} 
+          alt="FreeL 로고" 
+          className="h-10 w-auto opacity-80 drop-shadow-md" 
+        />
+      </div>
+
+      {/* 👉 오른쪽: 창 크기 확장/축소 버튼 (기존 유지, 스타일만 약간 다듬음) */}
+      <div className="relative z-10">
+        <button 
+          onClick={toggleWindowSize}
+          title={isExpanded ? "기본 모드로 축소" : "와이드 모드로 확장"}
+          className="h-9 w-9 flex items-center justify-center bg-white/5 hover:bg-white/15 rounded-lg text-sm font-bold text-white/80 transition-colors border border-white/10"
+        >
+          {isExpanded ? "◀" : "▶"}
+        </button>
+      </div>
+
     </header>
   );
 }

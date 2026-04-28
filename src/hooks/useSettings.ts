@@ -1,17 +1,8 @@
 import { useState, useEffect } from "react";
 import { load } from '@tauri-apps/plugin-store';
-import { invoke } from "@tauri-apps/api/core";
 
 export function useSettings() {
-  const [installedModules, setInstalledModules] = useState<string[]>([
-  "filesystem", 
-  "application", 
-  "system_info", 
-  "browser"
-]);
-  const [fsWhitelist, setFsWhitelist] = useState<string[]>([]);
   const [isStoreLoaded, setIsStoreLoaded] = useState(false);
-  const [userHome, setUserHome] = useState<string>("");
 
   // 👇 새롭게 추가된 API 키 및 설정 상태
   const [openaiKey, setOpenaiKey] = useState<string>("");
@@ -23,11 +14,6 @@ export function useSettings() {
     const loadSettings = async () => {
       try {
         const store = await load('freel_settings.json');
-        
-        setInstalledModules(["filesystem", "application", "system_info", "browser"]); // 무조건 4개 다 켜도록 강제 고정
-
-        const savedWhitelist = await store.get<string[]>("fsWhitelist");
-        if (savedWhitelist) setFsWhitelist(savedWhitelist);
 
         // 👇 설정 불러오기
         const savedOpenai = await store.get<string>("openaiKey");
@@ -41,9 +27,6 @@ export function useSettings() {
 
         const savedVoiceId = await store.get<string>("voiceId");
         if (savedVoiceId) setVoiceId(savedVoiceId);
-
-        const homePath = await invoke<string>("get_user_home");
-        setUserHome(homePath);
       } catch (err) {
         console.error("설정 로드 실패:", err);
       } finally {
@@ -59,8 +42,6 @@ export function useSettings() {
     const saveSettings = async () => {
       try {
         const store = await load('freel_settings.json');
-        await store.set("installedModules", installedModules);
-        await store.set("fsWhitelist", fsWhitelist);
         
         // 👇 설정 저장하기
         await store.set("openaiKey", openaiKey);
@@ -74,13 +55,9 @@ export function useSettings() {
       }
     };
     saveSettings();
-  }, [installedModules, fsWhitelist, openaiKey, serperKey, elevenlabsKey, voiceId, isStoreLoaded]);
+  }, [openaiKey, serperKey, elevenlabsKey, voiceId, isStoreLoaded]);
 
   return { 
-    installedModules, setInstalledModules,
-    fsWhitelist, setFsWhitelist, 
-    userHome,
-    // 👇 반환 객체에 추가
     openaiKey, setOpenaiKey,
     serperKey, setSerperKey,
     elevenlabsKey, setElevenlabsKey,
