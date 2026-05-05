@@ -43,8 +43,8 @@ export class ToolsExecutor {
       
       const timeoutId = setTimeout(() => {
         this.pendingTasks.delete(taskId);
-        resolve({ status: 'error', error: 'Task timeout (30s)' });
-      }, 30000);
+        resolve({ status: 'error', error: 'Task timeout (3m)' });
+      }, 180000);
 
       this.pendingTasks.set(taskId, (result) => {
         clearTimeout(timeoutId);

@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { getCurrentWindow, currentMonitor, LogicalSize } from '@tauri-apps/api/window';
 import OpenAI from "openai";
 import "./App.css";
 
@@ -23,12 +22,10 @@ function App() {
 
   const [activeTab, setActiveTab] = useState<"chat" | "2d" | "system">("chat");
   const [chatSubTab, setChatSubTab] = useState<"general" | "thought" | "debug">("general");
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isBentoOpen, setIsBentoOpen] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([
-    systemPrompt as Message, 
-    { role: "assistant", content: "안녕하세요! 사용자님의 데스크톱 제어 AI입니다." } as Message
+    systemPrompt as Message
   ]);
   const [inputText, setInputText] = useState("");
   
@@ -40,57 +37,17 @@ function App() {
     return new OpenAI({ apiKey: openaiKey, dangerouslyAllowBrowser: true });
   }, [openaiKey]);
 
-  // 상태 보고(setSystemStatus) 관련 코드를 떼어낸 훅 사용
   const { isRecording, startRecording, stopRecording } = useAudioRecorder({ openai, setInputText });
   const { isProcessing, sendMessage } = useAgent({ openai, messages, setMessages, serperKey, scanBlacklistNames, scanBlacklistPaths });
 
-  // 💡 [핵심 로직] 전체 메시지 중 '가장 마지막 사용자 입력'의 위치를 찾습니다.
   const lastUserIndex = messages.map(m => m.role).lastIndexOf('user');
-  // 💡 해당 위치부터 끝까지 잘라내어 "현재 진행 중인 작업" 배열을 만듭니다.
   const currentTaskMessages = lastUserIndex >= 0 ? messages.slice(lastUserIndex) : [];
-
-  useEffect(() => {
-    const adjustWindowSize = async () => {
-      try {
-        const appWindow = getCurrentWindow();
-        const monitor = await currentMonitor();
-        if (monitor) {
-          const monitorWidth = monitor.size.width / monitor.scaleFactor;
-          const monitorHeight = monitor.size.height / monitor.scaleFactor;
-          await appWindow.setSize(new LogicalSize(monitorWidth * 0.16, monitorHeight * 0.6));
-          await appWindow.show();
-        }
-      } catch (e) { console.warn("Tauri 환경 아님"); }
-    };
-    adjustWindowSize();
-  }, []);
 
   useEffect(() => { 
     if (messagesEndRef.current) {
       messagesEndRef.current.parentElement?.scrollTo({ top: messagesEndRef.current.parentElement.scrollHeight, behavior: 'smooth' });
     }
   }, [messages, chatSubTab]);
-  
-  useEffect(() => {
-    if (isExpanded && textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
-    }
-  }, [inputText, isExpanded]);
-
-  const toggleWindowSize = async () => {
-    try {
-      const nextExpanded = !isExpanded;
-      const appWindow = getCurrentWindow();
-      const monitor = await currentMonitor();
-      if (monitor) {
-        const monitorWidth = monitor.size.width / monitor.scaleFactor;
-        const monitorHeight = monitor.size.height / monitor.scaleFactor;
-        await appWindow.setSize(new LogicalSize(monitorWidth * (nextExpanded ? 0.4 : 0.16), monitorHeight * 0.6));
-      }
-      setIsExpanded(nextExpanded);
-    } catch (error) { console.error(error); }
-  };
 
   const handleSend = () => {
     if (!inputText.trim() || isProcessing) return;
@@ -104,9 +61,9 @@ function App() {
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
 
+      {/* 헤더 부분: 넓이 확장 관련 프롭스 모두 제거됨 */}
       <Header 
         isBentoOpen={isBentoOpen} setIsBentoOpen={setIsBentoOpen} 
-        isExpanded={isExpanded} toggleWindowSize={toggleWindowSize} 
         activeTab={activeTab} setActiveTab={setActiveTab} 
       />
 
@@ -124,17 +81,13 @@ function App() {
             </div>
 
             <div className="flex-1 overflow-hidden relative flex flex-col">
-              {/* 1. 일반 채팅 (전체 메시지에서 JSON만 숨김) */}
               {chatSubTab === "general" && (
                 <ChatList messages={messages.filter(m => !m.tool_calls && m.role !== 'tool')} messagesEndRef={messagesEndRef} />
               )}
               
-              {/* 2. 생각 과정 (currentTaskMessages 사용) */}
               {chatSubTab === "thought" && (
                 <div className="absolute inset-0 overflow-y-auto p-5 custom-scrollbar flex flex-col">
                   {currentTaskMessages.filter(m => m.tool_calls || m.role === 'tool').map((msg, i) => {
-                    
-                    // 1. AI가 도구를 호출하려고 판단한 순간 (파란색 노드)
                     if (msg.tool_calls) {
                       return msg.tool_calls.map((toolCall, j) => (
                         <div key={`call-${i}-${j}`} className="relative pl-6 border-l-2 border-blue-500/30 pb-6">
@@ -151,13 +104,10 @@ function App() {
                         </div>
                       ));
                     } 
-                    
-                    // 2. 엔진이 도구를 실행하고 결과를 보고한 순간
                     else if (msg.role === 'tool') {
                       let parsedContent: any = {};
                       try { parsedContent = JSON.parse(msg.content || "{}"); } catch(e) {}
 
-                      // 2-1. 특별 처리: make_plan (계획 수립) 결과일 때 (주황색 노드와 체크리스트)
                       if (parsedContent.plan) {
                          return (
                            <div key={`tool-${i}`} className="relative pl-6 border-l-2 border-amber-500/30 pb-6 animate-fade-in-up">
@@ -175,7 +125,6 @@ function App() {
                          )
                       }
 
-                      // 2-2. 일반 도구 실행 결과 (성공은 초록색, 실패는 빨간색 노드)
                       const isSuccess = parsedContent.status === 'success';
                       return (
                         <div key={`tool-${i}`} className={`relative pl-6 border-l-2 pb-6 animate-fade-in-up ${isSuccess ? 'border-emerald-500/30' : 'border-red-500/30'}`}>
@@ -192,7 +141,6 @@ function App() {
                     return null;
                   })}
 
-                  {/* 3. 현재 에이전트가 생각 중일 때 펄스(Ping) 애니메이션 표시 */}
                   {isProcessing && (
                      <div className="relative pl-6 border-l-2 border-slate-500/30 pb-6">
                        <div className="absolute w-3 h-3 bg-slate-400 rounded-full -left-[7px] top-1 animate-ping" />
@@ -201,7 +149,6 @@ function App() {
                      </div>
                   )}
 
-                  {/* 4. 아무런 도구 기록이 없을 때 빈 화면 표시 */}
                   {currentTaskMessages.filter(m => m.tool_calls || m.role === 'tool').length === 0 && !isProcessing && (
                     <div className="flex flex-col items-center justify-center h-full text-white/30 text-sm gap-3 mt-16">
                       <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 shadow-inner">
@@ -216,7 +163,6 @@ function App() {
                 </div>
               )}
 
-              {/* 3. 디버깅 (currentTaskMessages 사용) */}
               {chatSubTab === "debug" && (
                 <div className="absolute inset-0 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-4">
                   
@@ -226,7 +172,6 @@ function App() {
                   </div>
 
                   {currentTaskMessages.map((msg, i) => {
-                    // 💡 메시지 역할(Role)에 따라 카드 디자인(색상, 아이콘)을 동적으로 결정합니다.
                     let roleColor = "text-emerald-300";
                     let borderColor = "border-emerald-500/30";
                     let bgColor = "bg-emerald-950/20";
@@ -256,12 +201,10 @@ function App() {
 
                     return (
                       <div key={`debug-${i}`} className={`shrink-0 rounded-xl border ${borderColor} ${bgColor} overflow-hidden shadow-lg animate-fade-in-up`}>
-                        {/* 카드 헤더 (역할 및 인덱스 표시) */}
                         <div className={`px-4 py-2 border-b ${borderColor} bg-black/40 flex justify-between items-center`}>
                           <span className={`text-xs font-bold ${roleColor}`}>{roleLabel}</span>
                           <span className="text-[10px] text-white/30 font-mono">[{i}]</span>
                         </div>
-                        {/* 카드 본문 (JSON 원형 유지) */}
                         <div className="p-4 overflow-x-auto custom-scrollbar">
                           <pre className={`text-[11px] ${roleColor} font-mono whitespace-pre-wrap break-all leading-relaxed`}>
                             {JSON.stringify(msg, null, 2)}
@@ -275,9 +218,10 @@ function App() {
               )}
             </div>
 
+            {/* 입력창 부분: 불필요한 프롭스 모두 제거됨 */}
             <ChatInput 
               isRecording={isRecording} startRecording={startRecording} stopRecording={stopRecording}
-              isExpanded={isExpanded} textareaRef={textareaRef}
+              textareaRef={textareaRef}
               inputText={inputText} setInputText={setInputText}
               isProcessing={isProcessing} handleSend={handleSend}
             />

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface SystemSettingsProps {
   openaiKey: string; setOpenaiKey: (key: string) => void;
@@ -27,7 +27,7 @@ export const SystemSettingsView = ({
   openaiKey, setOpenaiKey, 
   serperKey, setSerperKey, 
   elevenlabsKey, setElevenlabsKey, 
-  voiceId, setVoiceId,
+  //voiceId, setVoiceId,
   scanBlacklistNames, setScanBlacklistNames,
   scanBlacklistPaths, setScanBlacklistPaths
 }: SystemSettingsProps) => {

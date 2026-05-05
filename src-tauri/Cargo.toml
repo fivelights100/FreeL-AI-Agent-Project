@@ -36,4 +36,5 @@ active-win-pos-rs = "0.10.0"
 display-info = "0.5.9"
 brightness = "0.8.0"
 futures = "0.3.32"
+tauri-plugin-shell = "2.3.5"
 

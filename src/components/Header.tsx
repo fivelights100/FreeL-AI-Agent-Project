@@ -4,14 +4,12 @@ import freelLogo from "../assets/freel-logo.png";
 interface HeaderProps {
   isBentoOpen: boolean;
   setIsBentoOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  isExpanded: boolean;
-  toggleWindowSize: () => Promise<void>;
   activeTab: "chat" | "2d" | "system";
   setActiveTab: React.Dispatch<React.SetStateAction<"chat" | "2d" | "system">>;
 }
 
 export const Header = ({ 
-  isBentoOpen, setIsBentoOpen, isExpanded, toggleWindowSize, activeTab, setActiveTab 
+  isBentoOpen, setIsBentoOpen, activeTab, setActiveTab 
 }: HeaderProps) => {
   
   return (
@@ -68,18 +66,6 @@ export const Header = ({
           className="h-10 w-auto opacity-80 drop-shadow-md" 
         />
       </div>
-
-      {/* 👉 오른쪽: 창 크기 확장/축소 버튼 (기존 유지, 스타일만 약간 다듬음) */}
-      <div className="relative z-10">
-        <button 
-          onClick={toggleWindowSize}
-          title={isExpanded ? "기본 모드로 축소" : "와이드 모드로 확장"}
-          className="h-9 w-9 flex items-center justify-center bg-white/5 hover:bg-white/15 rounded-lg text-sm font-bold text-white/80 transition-colors border border-white/10"
-        >
-          {isExpanded ? "◀" : "▶"}
-        </button>
-      </div>
-
     </header>
   );
 }
